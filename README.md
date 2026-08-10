@@ -28,7 +28,7 @@ It combines on-device hand recognition, text/voice translation into signs, and l
 
 ## Project Diagrams
 
-All diagrams below are PNG images from [`diagrams/`](diagrams/) (PlantUML sources are also in that folder).
+All diagrams below are PNG images from [`diagrams/`](diagrams/).
 
 ### 1. Use Cases
 
