@@ -8,9 +8,41 @@ This is now a full Flutter app flow:
 - home with offline ASL camera recognition
 - **Translate tab**: text-to-sign, voice-to-sign, letters & numbers, lips detection
 
+## Project Diagrams
+
+### System Architecture
+
+End-to-end layout of the Flutter UI, application logic, MediaPipe landmarks, and on-device TFLite classification.
+
+![System Architecture](docs/diagrams/system_architecture.png)
+
+### User Flow
+
+How a user moves through splash, onboarding, auth, home, recognition, and translate features.
+
+![User Flow](docs/diagrams/user_flow.png)
+
+### Use Cases
+
+Main actor goals supported by the app: recognize signs, practice, translate text/voice, and detect lipsing.
+
+![Use Cases](docs/diagrams/use_cases.png)
+
+### Recognition Sequence
+
+Frame-by-frame pipeline from camera capture to stabilized letter/word output.
+
+![Recognition Sequence](docs/diagrams/recognition_sequence.png)
+
+### Training Pipeline
+
+How landmark samples become the exported TFLite model used offline on the phone.
+
+![Training Pipeline](docs/diagrams/training_pipeline.png)
+
 ## Run The App
 
-From `mobile_offline/`:
+From the project root:
 
 1. `flutter pub get`
 2. Ensure these files exist:
