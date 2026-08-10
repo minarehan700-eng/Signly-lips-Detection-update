@@ -28,53 +28,66 @@ It combines on-device hand recognition, text/voice translation into signs, and l
 
 ## Project Diagrams
 
-Diagrams live in [`diagrams/`](diagrams/). PlantUML sources (`.puml`) and PNG exports are included so you can read them on GitHub or edit them later.
+All diagrams below are PNG images from [`diagrams/`](diagrams/) (PlantUML sources are also in that folder).
 
 ### 1. Use Cases
 
-Shows what a user can do in Signly: login, recognize ASL, text/voice to sign, letters & numbers, lips detection, dictionary, and profile. Recognition and lips features use the camera; voice-to-sign uses the microphone.
+**What it shows:** Every main action a user can take inside Signly.
+
+**Explanation:** The actor (user) can log in, recognize ASL from the camera, convert text or voice into signs, browse letters & numbers, run lips detection, open the dictionary, and manage a profile. Recognition and lips **include** camera use; voice-to-sign **includes** the microphone. Optional extensions cover confidence display, matching a target letter while practicing lips, and finger-spelling unknown words.
 
 ![Use Cases](diagrams/UseCase.png)
 
 ### 2. System Architecture
 
-Shows the layered design: Flutter screens → application controllers/engines → infrastructure (MediaPipe extractors, TFLite) → native Android/iOS bridges → on-device model files.
+**What it shows:** How the app is structured in layers from UI down to on-device AI models.
+
+**Explanation:** Flutter screens (recognition, translate, lips, dictionary, settings) talk to application services (`OfflineRecognitionController`, `SignTranslationEngine`, lips detectors). Those use infrastructure wrappers for MediaPipe and TFLite, which call native Android/iOS bridges, which load the `.task` and `.tflite` model files stored on the phone.
 
 ![System Architecture](diagrams/system%20architecture%20diagram.png)
 
 ### 3. Lips Detection Sequence
 
-Step-by-step flow for one camera frame: JPEG encode → Face Landmarker → blendshapes → lipsing / lip-letter detectors → UI update.
+**What it shows:** The ordered steps for processing one face/lips camera frame.
+
+**Explanation:** The camera frame is encoded as JPEG, sent through the Face Landmarker bridge, and converted into mouth-related blendshape scores. Rule-based detectors decide if the user is lipsing and which simple lip letter cue (A–E) fits, then the UI updates with mouth-open feedback.
 
 ![Lips Detection Sequence](diagrams/lips_detection_sequence.png)
 
 ### 4. Hand Recognition Sequence
 
-Step-by-step flow for ASL recognition: camera frame → Hand Landmarker → 21 landmarks → TFLite classifier → smoothed prediction on screen.
+**What it shows:** The ordered steps for offline ASL hand recognition.
+
+**Explanation:** Each camera frame is encoded, passed to MediaPipe Hand Landmarker to get 21 hand points, turned into a feature vector, classified by the TFLite ASL model, then smoothed/debounced by the recognition controller so the UI shows a stable letter or digit instead of flickering predictions.
 
 ![Hand Recognition Sequence](diagrams/hand_recognition_sequence.png)
 
 ### 5. App Navigation
 
-Screen map from splash → login → home tabs, including the Translate sub-screens (text, voice, letters/numbers, lips).
+**What it shows:** How users move between screens in the app.
+
+**Explanation:** Flow starts at Splash → Login/Signup → Home tabs. From Home, users reach Recognize, Translate (text-to-sign, voice-to-sign, letters & numbers, lips detection), Dictionary, Practice, and Profile/Settings. This map is useful for understanding UX and for documenting the graduation project screens.
 
 ![App Navigation](diagrams/app_navigation.png)
 
 ### 6. Lips Detection Classes
 
-Main classes involved in lips detection (face extractors, detectors, and how they connect to the UI).
+**What it shows:** The main Dart/native classes that power lips detection and how they connect.
+
+**Explanation:** The lips screen depends on a face landmark extractor (via the native face bridge), plus `LipsingDetector` and `LipLetterDetector` for temporal/rule-based decisions. This diagram helps developers see responsibilities when changing lips logic or debugging face-model issues.
 
 ![Lips Classes](diagrams/lips_classes.png)
 
 ### 7. On-Device AI Components
 
-Explains the three on-device models and the two AI paths:
+**What it shows:** The AI/ML pieces that run fully offline on the device.
 
-- **Hand path:** MediaPipe Hand Landmarker → TFLite ASL classifier → sign label (37 classes)  
-- **Face path:** MediaPipe Face Landmarker → rule-based `LipsingDetector` / `LipLetterDetector` → lipsing status + letter cues  
+**Explanation:** Signly uses three models: MediaPipe **Hand Landmarker**, MediaPipe **Face Landmarker**, and a custom **TFLite ASL classifier**.  
+- **Hand path:** camera → hand landmarks → TFLite → ASL label (37 classes: A–Z, 0–9, space).  
+- **Face path:** camera → face blendshapes → rule-based lipsing / lip-letter logic → lipsing status and letter cues.  
+No cloud API is required for recognition or lips detection.
 
-Source: [`diagrams/07_ai_components.puml`](diagrams/07_ai_components.puml)  
-*(Open in [PlantUML Online](https://www.plantuml.com/plantuml/uml/) or a PlantUML IDE extension to render.)*
+![On-Device AI Components](diagrams/07_ai_components.png)
 
 ## Run The App
 
