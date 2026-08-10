@@ -1,0 +1,51 @@
+@startuml training_pipeline
+skinparam backgroundColor #0C1022
+skinparam defaultFontName Segoe UI
+skinparam defaultFontColor #E8ECFF
+skinparam shadowing true
+skinparam roundcorner 20
+skinparam ArrowColor #10C8C8
+skinparam ArrowThickness 2
+skinparam activity {
+  BackgroundColor #1E2747
+  BorderColor #8B5CFF
+  FontColor #FFFFFF
+  ArrowColor #10C8C8
+  StartColor #4A63FF
+  EndColor #4A63FF
+  BarColor #10C8C8
+}
+skinparam note { BackgroundColor #2A3358; BorderColor #8B5CFF; FontColor #E8ECFF }
+
+title Signly Model Training Pipeline
+
+start
+
+:collect_imgs.py\nCapture webcam images per class\n(37 classes: A–Z, 0–9, space);
+
+note right
+  ~37 classes × N images each
+  Stored in per-class subdirectories
+end note
+
+:create_dataset.py\nRun MediaPipe Hand Landmarker on each image\nExtract 42-feature landmark vector\n(21 × [x−minX, y−minY])\nSave labelled NumPy dataset (X, y);
+
+:train_tflite_classifier.py\nLoad dataset, train/test split\nBuild Keras MLP:\n  Input(42) → Dense(ReLU) → Dense(ReLU) → Dense(37, softmax)\nTrain with Adam optimiser\nExport → asl_classifier.tflite via TFLiteConverter;
+
+note right
+  TFLiteConverter applies default
+  float32 conversion (no quantisation
+  loss at this stage)
+end note
+
+:test_tflite_parity.py\nRun both Keras model and TFLite interpreter\non held-out test-set feature vectors\nCompute label agreement rate;
+
+if (Agreement ≥ 99% ?) then (yes)
+  :prepare_mobile_assets.py\nCopy asl_classifier.tflite → Flutter assets/models/\nCopy labels.json → Flutter assets/models/\nCopy letter PNGs → assets/sign_language/letters/\nCopy word GIFs → assets/sign_language/gifs/;
+  :Mobile app assets ready\nRun: flutter pub get && flutter run;
+  stop
+else (no)
+  :Investigate TFLite conversion settings\n(try full_integer_quant or float16)\nRetrain or adjust model architecture;
+  stop
+endif
+@enduml

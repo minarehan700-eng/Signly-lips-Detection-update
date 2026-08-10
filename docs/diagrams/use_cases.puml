@@ -1,0 +1,41 @@
+@startuml use_cases
+skinparam backgroundColor #0C1022
+skinparam defaultFontName Segoe UI
+skinparam defaultFontColor #E8ECFF
+skinparam shadowing true
+skinparam roundcorner 20
+skinparam ArrowColor #10C8C8
+skinparam ArrowThickness 2
+skinparam actor { BackgroundColor #4A63FF; BorderColor #10C8C8; FontColor #FFFFFF }
+skinparam usecase { BackgroundColor #1E2747; BorderColor #8B5CFF; FontColor #FFFFFF }
+skinparam rectangle { BackgroundColor #0C1022; BorderColor #4A63FF; FontColor #FFFFFF; RoundCorner 15 }
+skinparam note { BackgroundColor #2A3358; BorderColor #8B5CFF; FontColor #E8ECFF }
+
+left to right direction
+
+actor "App User\n(Deaf / Hard-of-Hearing\nor Non-Signer)" as User
+
+rectangle "Signly Application" {
+  usecase "Register / Login" as UC1
+  usecase "View Onboarding" as UC2
+  usecase "Recognise ASL Signs\n(Real-Time Camera)" as UC3
+  usecase "Translate Text to Sign" as UC4
+  usecase "Translate Voice to Sign" as UC5
+  usecase "Browse Letters & Numbers" as UC6
+  usecase "Browse ASL Dictionary" as UC7
+  usecase "Practise ASL Signs\nwith Confidence Feedback" as UC8
+  usecase "View / Edit Profile" as UC9
+  usecase "Adjust Recognition\nSettings" as UC10
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+UC9 ..> UC10 : <<include>>
+@enduml

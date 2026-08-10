@@ -1,0 +1,84 @@
+@startuml user_flow
+skinparam backgroundColor #0C1022
+skinparam defaultFontName Segoe UI
+skinparam defaultFontColor #E8ECFF
+skinparam shadowing true
+skinparam roundcorner 20
+skinparam ArrowColor #10C8C8
+skinparam ArrowThickness 2
+skinparam state {
+  BackgroundColor #1E2747
+  BorderColor #8B5CFF
+  FontColor #FFFFFF
+  ArrowColor #10C8C8
+  StartColor #4A63FF
+  EndColor #4A63FF
+}
+skinparam note { BackgroundColor #2A3358; BorderColor #8B5CFF; FontColor #E8ECFF }
+
+title Signly User Navigation Flow
+
+[*] --> SplashScreen : App launch
+
+SplashScreen --> OnboardingScreen : First launch\n(no stored session)
+SplashScreen --> LoginScreen : Returning user\n(session exists)
+
+state OnboardingScreen {
+  [*] --> OB1 : Screen 1 — Gesture Recognition
+  OB1 --> OB2 : Next
+  OB2 --> OB3 : Next
+  OB3 --> [*] : Get Started
+}
+note right of OnboardingScreen : 3 swipeable\nonboarding cards
+
+OnboardingScreen --> LoginScreen
+
+state LoginScreen {
+  [*] --> EnterCredentials
+  EnterCredentials --> LoggedIn : Sign In
+  EnterCredentials --> SignupScreen : No account? Sign Up
+}
+
+SignupScreen --> LoginScreen : Account created
+
+LoginScreen --> HomeScreen : Authenticated
+
+state HomeScreen {
+  [*] --> RecogniseTab : Default tab
+
+  state RecogniseTab {
+    [*] --> CameraPreview
+    CameraPreview --> SignRecognised : Hand detected\n+ stable prediction
+    SignRecognised --> CameraPreview : Continue signing
+  }
+
+  state TranslateTab {
+    [*] --> TranslateHub
+    TranslateHub --> TextToSign
+    TranslateHub --> VoiceToSign
+    TranslateHub --> LettersNumbers
+  }
+
+  state DictionaryTab {
+    [*] --> DictionaryList
+    DictionaryList --> SignDetail : Tap entry
+  }
+
+  state PracticeTab {
+    [*] --> PracticeList
+    PracticeList --> PracticeSession : Select sign
+    PracticeSession --> PracticeList : Back
+  }
+
+  state ProfileTab {
+    [*] --> ProfileView
+    ProfileView --> SettingsScreen : Open Settings
+    SettingsScreen --> ProfileView : Back
+  }
+
+  RecogniseTab --> TranslateTab : Tab tap
+  TranslateTab --> DictionaryTab : Tab tap
+  DictionaryTab --> PracticeTab : Tab tap
+  PracticeTab --> ProfileTab : Tab tap
+}
+@enduml

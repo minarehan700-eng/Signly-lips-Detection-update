@@ -1,0 +1,55 @@
+@startuml recognition_sequence
+skinparam backgroundColor #0C1022
+skinparam defaultFontName Segoe UI
+skinparam defaultFontColor #E8ECFF
+skinparam shadowing true
+skinparam roundcorner 20
+skinparam ArrowColor #10C8C8
+skinparam ArrowThickness 2
+skinparam sequence {
+  ArrowColor #10C8C8
+  LifeLineBorderColor #8B5CFF
+  ParticipantBackgroundColor #252B4A
+  ParticipantFontColor #FFFFFF
+  ParticipantBorderColor #4A63FF
+}
+skinparam note { BackgroundColor #2A3358; BorderColor #8B5CFF; FontColor #E8ECFF }
+
+title Real-Time ASL Recognition Pipeline
+
+participant "Camera\nStream" as CAM
+participant "CameraFrame\nEncoder" as ENC
+participant "MediaPipe\nBridge\n(Native Kotlin/Swift)" as MP
+participant "TFLite\nClassifier" as TF
+participant "Prediction\nPostProcessor" as PP
+participant "Recognition\nScreen (UI)" as UI
+
+CAM -> ENC : Raw YUV / NV21 frame\n(width, height, rotation)
+ENC -> ENC : Convert YUV → JPEG\n(image Dart package)
+ENC -> MP : invokeMethod("processFrame")\n{bytes: JPEG, width, height, rotation}
+
+MP -> MP : BitmapFactory.decodeStream(bytes)
+MP -> MP : MediaPipe HandLandmarker.detect()
+alt Hand detected
+  MP -> MP : Extract 21 landmarks (x, y)\nNormalise: xi − min(x), yi − min(y)
+  MP -> MP : Build features42 List<Double>
+  MP --> ENC : {features42: [...42 doubles], ts: epoch_ms}
+  ENC --> TF : List<double>[42]
+  TF -> TF : Interpreter.run(input[1×42], output[1×37])
+  TF -> TF : ArgMax over 37-class softmax
+  TF --> PP : Prediction(label, confidence, ts)
+  PP -> PP : 1. Confidence gate (≥ 0.65 ?)
+  PP -> PP : 2. SlidingWindow[5] majority vote
+  PP -> PP : 3. Duplicate suppression\n(same as lastEmitted ?)
+  alt Stable new prediction
+    PP --> UI : Prediction(label, confidence, ts)
+    UI -> UI : Append label to text buffer
+    UI -> UI : Update hand skeleton overlay
+  else Filtered / duplicate
+    PP --> UI : null
+  end
+else No hand detected
+  MP --> ENC : null
+  ENC --> UI : (no update)
+end
+@enduml

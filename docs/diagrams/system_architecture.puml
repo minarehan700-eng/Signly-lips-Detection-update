@@ -1,0 +1,74 @@
+@startuml system_architecture
+skinparam backgroundColor #0C1022
+skinparam defaultFontName Segoe UI
+skinparam defaultFontColor #E8ECFF
+skinparam shadowing true
+skinparam roundcorner 20
+skinparam ArrowColor #10C8C8
+skinparam ArrowThickness 2
+skinparam linetype ortho
+skinparam package { BackgroundColor #1A2141; BorderColor #4A63FF; FontColor #FFFFFF }
+skinparam component { BackgroundColor #252B4A; BorderColor #8B5CFF; FontColor #FFFFFF }
+skinparam actor { BackgroundColor #4A63FF; BorderColor #10C8C8; FontColor #FFFFFF }
+skinparam rectangle { BackgroundColor #1E2747; BorderColor #10C8C8; FontColor #FFFFFF; RoundCorner 15 }
+skinparam database { BackgroundColor #2A3358; BorderColor #10C8C8; FontColor #FFFFFF }
+skinparam note { BackgroundColor #2A3358; BorderColor #8B5CFF; FontColor #E8ECFF }
+
+actor User
+
+package "Flutter Application (Dart)" {
+  package "Screens (UI Layer)" {
+    component [RecognitionScreen]
+    component [TranslateHub]
+    component [DictionaryScreen]
+    component [PracticeScreen]
+    component [ProfileScreen]
+  }
+
+  package "Application Layer" {
+    component [OfflineRecognitionController]
+    component [SignTranslationEngine]
+    component [PredictionPostProcessor]
+  }
+
+  package "Domain Layer" {
+    component [HandLandmarkExtractor\n<<interface>>]
+    component [GestureClassifier\n<<interface>>]
+    component [NormalizedLandmarks]
+    component [Prediction]
+  }
+
+  package "Infrastructure Layer" {
+    component [MediaPipeHandLandmarkExtractor]
+    component [TfliteGestureClassifier]
+    component [CameraFrameEncoder]
+  }
+}
+
+package "Native Platform Bridge" {
+  component [HandLandmarkerBridge.kt\n(Android / Kotlin)]
+  component [AppDelegate.swift\n(iOS / Swift)]
+}
+
+database "On-Device Assets" {
+  component [asl_classifier.tflite]
+  component [labels.json]
+  component [hand_landmarker.task]
+  component [Sign GIFs & PNGs]
+}
+
+User --> RecognitionScreen
+RecognitionScreen --> OfflineRecognitionController
+OfflineRecognitionController --> [HandLandmarkExtractor\n<<interface>>]
+OfflineRecognitionController --> [GestureClassifier\n<<interface>>]
+OfflineRecognitionController --> PredictionPostProcessor
+[HandLandmarkExtractor\n<<interface>>] <|.. MediaPipeHandLandmarkExtractor
+[GestureClassifier\n<<interface>>] <|.. TfliteGestureClassifier
+MediaPipeHandLandmarkExtractor --> [HandLandmarkerBridge.kt\n(Android / Kotlin)]
+MediaPipeHandLandmarkExtractor --> [AppDelegate.swift\n(iOS / Swift)]
+TfliteGestureClassifier --> [asl_classifier.tflite]
+TfliteGestureClassifier --> [labels.json]
+[HandLandmarkerBridge.kt\n(Android / Kotlin)] --> [hand_landmarker.task]
+TranslateHub --> SignTranslationEngine
+SignTranslationEngine --> [Sign GIFs & PNGs]
+@enduml

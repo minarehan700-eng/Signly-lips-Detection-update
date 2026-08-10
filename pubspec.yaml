@@ -1,0 +1,43 @@
+name: mobile_offline
+description: Offline ASL recognition module using MediaPipe and TFLite.
+publish_to: "none"
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  camera: ^0.11.0+1
+  tflite_flutter: ^0.11.0
+  collection: ^1.18.0
+  shared_preferences: ^2.3.2
+  image: ^4.3.0
+  flutter_animate: ^4.5.2
+  webview_flutter: ^4.8.0
+  speech_to_text: ^7.0.0
+  avatar_glow: ^3.0.1
+  path_provider: ^2.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "../logo.jpg"
+  adaptive_icon_background: "#1A2141"
+  adaptive_icon_foreground: "../logo.jpg"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/models/
+    - assets/sign_language/letters/
+    - assets/sign_language/gifs/
+    - assets/sign_language/icons/
+    - assets/images/
