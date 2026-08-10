@@ -1,0 +1,54 @@
+@startuml 02_system_architecture
+skinparam componentStyle rectangle
+
+package "Flutter UI" {
+  [RecognitionScreen]
+  [TranslateHubScreen]
+  [LipsDetectionScreen]
+  [DictionaryScreen]
+  [Profile / Settings]
+}
+
+package "Application Layer" {
+  [OfflineRecognitionController]
+  [SignTranslationEngine]
+  [LipsingDetector]
+  [LipLetterDetector]
+}
+
+package "Infrastructure Layer" {
+  [MediaPipeHandLandmarkExtractor]
+  [MediaPipeFaceLandmarkExtractor]
+  [TfliteGestureClassifier]
+  [CameraFrameEncoder]
+}
+
+package "Native Bridges" {
+  [HandLandmarkerBridge\n(Android / iOS)]
+  [FaceLandmarkerBridge\n(Android / iOS)]
+}
+
+package "On-Device Models" {
+  database "hand_landmarker.task"
+  database "face_landmarker.task"
+  database "asl_classifier.tflite"
+}
+
+[RecognitionScreen] --> [OfflineRecognitionController]
+[LipsDetectionScreen] --> [LipsingDetector]
+[LipsDetectionScreen] --> [LipLetterDetector]
+[TranslateHubScreen] --> [SignTranslationEngine]
+
+[OfflineRecognitionController] --> [MediaPipeHandLandmarkExtractor]
+[OfflineRecognitionController] --> [TfliteGestureClassifier]
+[LipsDetectionScreen] --> [MediaPipeFaceLandmarkExtractor]
+[RecognitionScreen] --> [CameraFrameEncoder]
+[LipsDetectionScreen] --> [CameraFrameEncoder]
+
+[MediaPipeHandLandmarkExtractor] --> [HandLandmarkerBridge\n(Android / iOS)]
+[MediaPipeFaceLandmarkExtractor] --> [FaceLandmarkerBridge\n(Android / iOS)]
+[TfliteGestureClassifier] --> "asl_classifier.tflite"
+[HandLandmarkerBridge\n(Android / iOS)] --> "hand_landmarker.task"
+[FaceLandmarkerBridge\n(Android / iOS)] --> "face_landmarker.task"
+
+@enduml

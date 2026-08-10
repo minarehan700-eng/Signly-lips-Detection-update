@@ -1,0 +1,30 @@
+@startuml 03_lips_detection_sequence
+title Lips Detection – Frame Processing Flow
+
+actor User
+participant "LipsDetectionScreen\n(UI)" as UI
+participant "Camera" as Cam
+participant "CameraFrameEncoder" as Enc
+participant "MediaPipeFaceLandmarkExtractor" as Face
+participant "FaceLandmarkerBridge\n(Native)" as Bridge
+participant "LipsingDetector" as Lipsing
+participant "LipLetterDetector" as Letter
+
+User -> UI : Open Lips Detection
+UI -> Cam : Start camera stream
+loop Each camera frame
+  Cam -> UI : CameraImage
+  UI -> Enc : encodeToJpeg(image)
+  Enc --> UI : JPEG bytes
+  UI -> Face : processFrame(bytes, width, height)
+  Face -> Bridge : processFaceFrame (MethodChannel)
+  Bridge --> Face : blendshapes + mouth box
+  Face --> UI : FaceLipsResult (raw)
+  UI -> Lipsing : update(raw)
+  Lipsing --> UI : FaceLipsResult (isLipsing)
+  UI -> Letter : update(result)
+  Letter --> UI : FaceLipsResult (detectedLetter)
+  UI -> User : Show lipsing status & letter
+end
+
+@enduml

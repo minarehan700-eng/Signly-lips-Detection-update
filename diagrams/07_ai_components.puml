@@ -1,0 +1,64 @@
+@startuml 07_ai_components
+title Signly – On-Device AI / ML Components
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+note as N1
+  **All inference runs offline on device**
+  Framework: **MediaPipe Tasks** + **TensorFlow Lite**
+end note
+
+package "Input" {
+  [Camera Frame\n(JPEG)] as Camera
+}
+
+package "AI Models\n(on-device)" {
+  database "hand_landmarker.task\n**MediaPipe Hand Landmarker**" as HandModel
+  database "face_landmarker.task\n**MediaPipe Face Landmarker**" as FaceModel
+  database "asl_classifier.tflite\n**TFLite ASL Classifier**" as TfliteModel
+}
+
+package "Features" {
+  [21 Hand Landmarks\n(x, y, z)] as HandFeatures
+  [Face Blendshapes\n(mouthOpen, pucker, smile…)] as FaceFeatures
+  [Normalized Feature Vector] as TfliteInput
+}
+
+package "Post-Processing" {
+  [Rule-based Dart\n**LipsingDetector**] as Lipsing
+  [Rule-based Dart\n**LipLetterDetector**] as LipLetter
+}
+
+package "Output" {
+  [ASL Sign Label\n(37 classes)] as SignLabel
+  [Lipsing Status\n+ Letter A–E] as LipsOutput
+}
+
+' --- Hand recognition path (ASL Recognize tab) ---
+Camera -down-> HandModel : Hand path
+HandModel -down-> HandFeatures : detect 21 points
+HandFeatures -down-> TfliteModel : landmark features
+TfliteModel -down-> SignLabel : classify sign
+
+' --- Face / lips path (Lips Detection tab) ---
+Camera -down-> FaceModel : Face path
+FaceModel -down-> FaceFeatures : face mesh +\nblendshape scores
+FaceFeatures -down-> Lipsing : threshold rules
+FaceFeatures -down-> LipLetter
+Lipsing -down-> LipsOutput
+LipLetter -down-> LipsOutput
+
+note bottom of LipLetter
+  Letters **A–E** use **heuristic rules**
+  on blendshape scores — **not** a deep learning model
+end note
+
+note bottom of HandModel
+  Used by **ASL Recognize** tab
+end note
+
+note bottom of FaceModel
+  Used by **Lips Detection** tab
+end note
+
+@enduml

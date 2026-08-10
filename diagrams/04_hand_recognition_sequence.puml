@@ -1,0 +1,34 @@
+@startuml 04_hand_recognition_sequence
+title Hand Sign Recognition – Frame Processing Flow
+
+actor User
+participant "RecognitionScreen\n(UI)" as UI
+participant "Camera" as Cam
+participant "CameraFrameEncoder" as Enc
+participant "OfflineRecognitionController" as Ctrl
+participant "MediaPipeHandLandmarkExtractor" as Hand
+participant "HandLandmarkerBridge\n(Native)" as Bridge
+participant "TfliteGestureClassifier" as TFLite
+
+User -> UI : Open Recognize tab
+UI -> Ctrl : initialize()
+Ctrl -> Hand : initialize()
+Hand -> Bridge : initializeHandLandmarker
+Ctrl -> TFLite : load model
+
+loop Each camera frame
+  Cam -> UI : CameraImage
+  UI -> Enc : encodeToJpeg(image)
+  Enc --> UI : JPEG bytes
+  UI -> Ctrl : onFrame(bytes, width, height)
+  Ctrl -> Hand : extract landmarks
+  Hand -> Bridge : processHandFrame (MethodChannel)
+  Bridge --> Hand : 21 hand landmarks
+  Hand --> Ctrl : NormalizedLandmarks
+  Ctrl -> TFLite : classify(features)
+  TFLite --> Ctrl : Prediction (sign label)
+  Ctrl --> UI : Prediction
+  UI -> User : Show recognized sign text
+end
+
+@enduml

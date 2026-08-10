@@ -1,0 +1,48 @@
+@startuml 05_app_navigation
+title Signly App Navigation
+
+state "SplashScreen" as Splash
+state "LoginScreen" as Login
+state "HomeScreen" as Home
+
+state "Recognize Tab" as TabRecognize
+state "Translate Tab" as TabTranslate
+state "Dictionary Tab" as TabDictionary
+state "Profile Tab" as TabProfile
+
+state "TextToSignScreen" as TextSign
+state "VoiceToSignScreen" as VoiceSign
+state "LettersAndNumbersScreen" as LettersNum
+state "LipsDetectionScreen" as Lips
+state "LettersGridScreen" as LettersGrid
+state "NumbersGridScreen" as NumbersGrid
+state "SettingsScreen" as Settings
+
+[*] --> Splash
+Splash --> Login : Not logged in
+Splash --> Home : Already logged in
+
+Login --> Home : Login success
+
+Home --> TabRecognize : Bottom nav
+Home --> TabTranslate : Bottom nav
+Home --> TabDictionary : Bottom nav
+Home --> TabProfile : Bottom nav
+
+TabTranslate --> TextSign : Text to Sign
+TabTranslate --> VoiceSign : Voice to Sign
+TabTranslate --> LettersNum : Letters & Numbers
+TabTranslate --> Lips : Lips Detection
+
+LettersNum --> LettersGrid : Show Letters
+LettersNum --> NumbersGrid : Show Numbers
+
+TabProfile --> Settings : Settings
+
+note right of Home
+  Bottom tabs:
+  Recognize | Translate
+  Dictionary | Profile
+end note
+
+@enduml
