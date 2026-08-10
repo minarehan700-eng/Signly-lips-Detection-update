@@ -1,16 +1,84 @@
-# Mobile Offline ASL App (Signly)
+# Signly — Offline ASL & Lips Detection App
 
-This is now a full Flutter app flow:
+**Signly** is a Flutter mobile app that helps people learn and use **American Sign Language (ASL)** without needing an internet connection.
 
-- animated splash
-- onboarding
-- login and signup
-- home with offline ASL camera recognition
-- **Translate tab**: text-to-sign, voice-to-sign, letters & numbers, lips detection
+It combines on-device hand recognition, text/voice translation into signs, and lips (mouth-movement) detection so learners, Deaf and hard-of-hearing users, and anyone practicing ASL can communicate and study anywhere — even offline.
+
+## How Signly Helps
+
+| Who it helps | How |
+|---|---|
+| ASL learners | Practice letters and words with live camera feedback and a dictionary |
+| Deaf / hard-of-hearing users | Convert typed or spoken text into visual signs (GIFs and finger-spelling) |
+| Anyone practicing mouth cues | Lips detection shows whether mouth movement / lipsing is happening |
+| Users with weak connectivity | All recognition runs **on the phone** (MediaPipe + TFLite) — no cloud required |
+
+## What The App Does
+
+- **Splash & onboarding** — introduce the product and guide first-time users  
+- **Login / signup** — simple local auth flow  
+- **ASL recognition** — camera reads hand landmarks and classifies letters/digits offline  
+- **Translate hub**
+  - **Text to Sign** — type words; known words play GIFs, others are finger-spelled  
+  - **Voice to Sign** — speak into the mic; speech becomes signs  
+  - **Letters & Numbers** — browse A–Z and 0–9 with reference images  
+  - **Lips Detection** — front camera tracks mouth open / lipsing and related letter cues  
+- **Dictionary & practice** — look up signs and practice with feedback  
+- **Profile / settings** — account and app preferences  
+
+## Project Diagrams
+
+Diagrams live in [`diagrams/`](diagrams/). PlantUML sources (`.puml`) and PNG exports are included so you can read them on GitHub or edit them later.
+
+### 1. Use Cases
+
+Shows what a user can do in Signly: login, recognize ASL, text/voice to sign, letters & numbers, lips detection, dictionary, and profile. Recognition and lips features use the camera; voice-to-sign uses the microphone.
+
+![Use Cases](diagrams/UseCase.png)
+
+### 2. System Architecture
+
+Shows the layered design: Flutter screens → application controllers/engines → infrastructure (MediaPipe extractors, TFLite) → native Android/iOS bridges → on-device model files.
+
+![System Architecture](diagrams/system%20architecture%20diagram.png)
+
+### 3. Lips Detection Sequence
+
+Step-by-step flow for one camera frame: JPEG encode → Face Landmarker → blendshapes → lipsing / lip-letter detectors → UI update.
+
+![Lips Detection Sequence](diagrams/lips_detection_sequence.png)
+
+### 4. Hand Recognition Sequence
+
+Step-by-step flow for ASL recognition: camera frame → Hand Landmarker → 21 landmarks → TFLite classifier → smoothed prediction on screen.
+
+![Hand Recognition Sequence](diagrams/hand_recognition_sequence.png)
+
+### 5. App Navigation
+
+Screen map from splash → login → home tabs, including the Translate sub-screens (text, voice, letters/numbers, lips).
+
+![App Navigation](diagrams/app_navigation.png)
+
+### 6. Lips Detection Classes
+
+Main classes involved in lips detection (face extractors, detectors, and how they connect to the UI).
+
+![Lips Classes](diagrams/lips_classes.png)
+
+### 7. On-Device AI Components
+
+Explains the three on-device models and the two AI paths:
+
+- **Hand path:** MediaPipe Hand Landmarker → TFLite ASL classifier → sign label (37 classes)  
+- **Face path:** MediaPipe Face Landmarker → rule-based `LipsingDetector` / `LipLetterDetector` → lipsing status + letter cues  
+
+Source: [`diagrams/07_ai_components.puml`](diagrams/07_ai_components.puml)  
+*(Open in [PlantUML Online](https://www.plantuml.com/plantuml/uml/) or a PlantUML IDE extension to render.)*
 
 ## Run The App
 
-From `mobile_offline/`:
+From the project root:
 
 1. `flutter pub get`
 2. Ensure these files exist:
@@ -25,42 +93,25 @@ From `mobile_offline/`:
 4. Run:
    - `flutter run`
 
-To copy TFLite model + sign language assets from the main project:
+To prepare TFLite + sign assets:
 
 ```bash
 python prepare_mobile_assets.py
 ```
 
-Face landmarker download:
+Face landmarker download:  
 https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
 
-## Translate Features
+## Technical Notes
 
-Open the **Translate** tab from the bottom navigation:
-
-| Feature | Description |
-|---|---|
-| Text to Sign | Type text; known words play GIFs, unknown words are finger-spelled |
-| Voice to Sign | Tap mic, speak, tap again; signs play after recognition |
-| Letters & Numbers | Browse A–Z and 0–9 grids with full sign images |
-| Lips Detection | Front camera + MediaPipe Face Landmarker; shows mouth open % and lipsing yes/no |
-
-Voice-to-sign requires microphone permission (Android `RECORD_AUDIO`, iOS mic + speech recognition).
-
-## Architecture
-
-- Method channel: `asl/offline/landmarks`
-  - `initializeHandLandmarker()`
-  - `processFrame({bytes, width, height, rotation}) -> {features42, ts} | null`
-- Method channel: `asl/offline/face`
-  - `initializeFaceLandmarker()`
-  - `processFaceFrame({bytes, ...}) -> {faceDetected, mouthOpen, mouthPucker, smile, ts}`
-- Camera stream -> JPEG frame encode -> MediaPipe landmarks -> normalized 42 features -> TFLite classifier -> smoothing/debounce -> recognized text.
-- Lips: camera -> Face Landmarker blendshapes -> `LipsingDetector` temporal logic -> UI.
-- Sign translation: shared `SignTranslationEngine` plays letter PNGs and word GIFs with original timing from the source app.
+- Method channel `asl/offline/landmarks` — hand landmarker init + frame processing  
+- Method channel `asl/offline/face` — face landmarker init + frame processing  
+- Hand pipeline: camera → JPEG → MediaPipe landmarks → 42 features → TFLite → smoothing → text  
+- Lips pipeline: camera → Face Landmarker blendshapes → `LipsingDetector` → UI  
+- Translation: `SignTranslationEngine` plays letter PNGs and word GIFs  
 
 ## Important
 
-- If `hand_landmarker.task` is missing, recognition initialization fails and shows an error.
-- If `face_landmarker.task` is missing, Lips Detection initialization fails with a clear error.
-- Sign language assets are copied from `Sign-Languag-App-main/Sign-Languag-App-main/assets/` via `prepare_mobile_assets.py`.
+- Missing `hand_landmarker.task` → ASL recognition fails to initialize  
+- Missing `face_landmarker.task` → Lips Detection fails with a clear error  
+- Voice-to-sign needs mic permission (Android `RECORD_AUDIO`, iOS mic + speech recognition)  
